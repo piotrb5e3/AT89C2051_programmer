@@ -18,8 +18,8 @@ The schematic is included as `schematic/schematic.pdf`.
 
 ## Installing the programmer software
 1. (recommended) Create a python virtualenv
-  1. `python3 -m venv venv`
-  2. `. venv/bin/activate`
+    1. `python3 -m venv venv`
+    2. `. venv/bin/activate`
 2. Install from PyPI `pip install at89overlord`
 
 ## Programming
