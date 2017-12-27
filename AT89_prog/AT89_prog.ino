@@ -2,6 +2,7 @@
  * For AT89C2051 programming
  * 
  */
+#include <stdint.h>
 
 #define RST_PIN A0
 #define EN_12V_PIN A1
@@ -12,11 +13,12 @@
 #define P37_PIN 3
 #define XTAL1_PIN A2
 
-#define CMD_ERASE 'E'
+#define CMD_ERASE 'X'
 #define CMD_READ_FULL 'R'
 #define CMD_WRITE_FULL 'W'
+#define CMD_READ_SIGNATURE 'S'
 
-byte hex2int(char c) {
+uint8_t hex2int(char c) {
   if(c >= '0' && c<= '9') {
     return c - '0';
   } else if(c >= 'a' && c<= 'f') {
@@ -26,8 +28,8 @@ byte hex2int(char c) {
   } else return 0;
 }
 
-byte serial_get_byte() {
-  byte ret = 0;
+uint8_t serial_get_byte() {
+  uint8_t ret = 0;
   while(!Serial.available());
   ret = 16*hex2int(Serial.read());
   while(!Serial.available());
@@ -35,7 +37,13 @@ byte serial_get_byte() {
   return ret;
 }
 
-byte paralel_pins[] = {
+void serial_write_byte(uint8_t b) {
+  char str[3];
+  sprintf(str, "%.2X\0", b);
+  Serial.print(str);
+}
+
+uint8_t paralel_pins[] = {
   4, //P1.0
   5,
   6,
@@ -53,19 +61,19 @@ void off12() {
   digitalWrite(EN_12V_PIN, LOW);
 }
 
-byte read_byte() {
-  for(char i = 0; i<8; i++)
+uint8_t read_byte() {
+  for(uint8_t i = 0; i<8; i++)
     pinMode(paralel_pins[i], INPUT);
-  byte r = 0;
-  for(char i = 0; i<8; i++)
+  uint8_t r = 0;
+  for(uint8_t i = 0; i<8; i++)
     r |= digitalRead(paralel_pins[i]) << i;
   return r;
 }
 
-void put_byte(byte dt) {
-  for(char i = 0; i<8; i++)
+void put_byte(uint8_t dt) {
+  for(uint8_t i = 0; i<8; i++)
     pinMode(paralel_pins[i], OUTPUT);
-  for(char i = 0; i<8; i++)
+  for(uint8_t i = 0; i<8; i++)
     digitalWrite(paralel_pins[i],dt & (1 << i));
 }
 
@@ -91,10 +99,11 @@ void read_signature() {
   digitalWrite(P35_PIN, LOW);
   digitalWrite(P37_PIN, LOW);  
   delay(1);
-  Serial.println(read_byte());
+  serial_write_byte(read_byte());
   advance_counter();
-  Serial.println(read_byte());
+  serial_write_byte(read_byte());
   advance_counter();
+  Serial.write('$');
 }
 
 void chip_erase() {
@@ -113,37 +122,29 @@ void chip_erase() {
 }
 
 void read_flash(int count) {
-  char str[30];
-  int chunksize = 16;
   init_prog();
   digitalWrite(P33_PIN, LOW);
   digitalWrite(P34_PIN, LOW);
   digitalWrite(P35_PIN, HIGH);
   digitalWrite(P37_PIN, HIGH);
-  for(int i = 0 ; i < count;) {
-    int j = 0;
-    sprintf(str, "0x%.4X - 0x%.4X: \0", i, i + chunksize);
-    Serial.print(str);
-    for(;i<count && j<chunksize;i++,j++) {
-      delay(1);
-      sprintf(str, "0x%.2X \0",read_byte());
-      Serial.print(str);
-      advance_counter();
-    }
-    Serial.print("\r\n");
+  for(int i = 0; i < count; i++) {
+    delay(1);
+    serial_write_byte(read_byte());
+    advance_counter();
   }
 }
 
 void chip_read() {
-  byte hi = serial_get_byte();
-  byte lo = serial_get_byte();
-  int count = hi * 256 + lo;
+  uint8_t hi = serial_get_byte();
+  uint8_t lo = serial_get_byte();
+  uint16_t count = hi * 256 + lo;
+  Serial.print("$");
   read_flash(count); 
   Serial.print("$");
 }
 
-byte write_next(byte dat) {
-  byte resp = 0;
+uint8_t write_next(uint8_t dat) {
+  uint8_t resp = 0;
   //Set mode to write
   digitalWrite(P33_PIN, LOW);
   digitalWrite(P34_PIN, HIGH);
@@ -187,7 +188,7 @@ void setup() {
   pinMode(P37_PIN, OUTPUT);
   pinMode(XTAL1_PIN, OUTPUT);
 
-  for(char i = 0; i<8; i++)
+  for(uint8_t i = 0; i<8; i++)
     pinMode(paralel_pins[i], INPUT);
 
   digitalWrite(RST_PIN, LOW);
@@ -204,28 +205,31 @@ void setup() {
 }
 
 void chip_write() {
-  int chunksize = 256;
-  byte data[256];
-  byte hi = serial_get_byte();
-  byte lo = serial_get_byte();
-  int count = hi * 256 + lo;
+  uint16_t chunksize = 256;
+  uint8_t data[256];
+  uint8_t hi = serial_get_byte();
+  uint8_t lo = serial_get_byte();
+  uint16_t count = hi * 256 + lo;
   init_prog();
   delay(1);
   Serial.write('$');
-  for(int i = 0; i<count;) {
-    int ct = 0;
+  for(uint16_t i = 0; i<count;) {
+    uint16_t ct = 0;
     for(;ct<chunksize && i<count; i++,ct++) {
-      byte tmp = serial_get_byte();
+      uint8_t tmp = serial_get_byte();
       data[ct] = tmp;
     }
-    for(int j = 0; j<ct;j++) {
+    for(uint16_t j = 0; j<ct;j++) {
       if(!write_next(data[j])) {
         Serial.print("^");
         return;
       }
     }
     Serial.write('$');
+    Serial.write(i);
+    delay(1);
   }
+  Serial.write('$');
 }
 
 void loop() {
@@ -233,24 +237,23 @@ void loop() {
 
   switch(Serial.read()) {
     case CMD_ERASE:
-    Serial.println("Erasing");
     chip_erase();
     break;
 
     case CMD_READ_FULL:
-    Serial.println("Reading from flash:");
     chip_read();
     break;
 
     case CMD_WRITE_FULL:
-    Serial.println("Writing to flash:");
     chip_write();
+    break;
+
+    case CMD_READ_SIGNATURE:
+    read_signature();
     break;
     
     default:
     Serial.println("Unknown cmd");
     Serial.print('^');
-    
   }
-
 }

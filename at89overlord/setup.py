@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='at89overlord',
-    version='0.1.0',
+    version='0.2.0',
     description='Arduino-based AT89C2051 programmer',
     url='https://github.com/piotrb5e3/AT89C2051_programmer',
     author='Piotr Bakalarski',
@@ -11,6 +11,7 @@ setup(
     install_requires=[
         'intelhex',
         'pyserial',
+        'termcolor',
     ],
     python_requires='>=3',
     packages=find_packages(),
