@@ -226,8 +226,6 @@ void chip_write() {
       }
     }
     Serial.write('$');
-    Serial.write(i);
-    delay(1);
   }
   Serial.write('$');
 }
