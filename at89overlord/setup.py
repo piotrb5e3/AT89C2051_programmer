@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='at89overlord',
-    version='0.2.2',
+    version='0.3.0',
     description='Arduino-based AT89C2051 programmer',
     url='https://github.com/piotrb5e3/AT89C2051_programmer',
     author='Piotr Bakalarski',
