@@ -17,6 +17,9 @@
 #define CMD_READ_FULL 'R'
 #define CMD_WRITE_FULL 'W'
 #define CMD_READ_SIGNATURE 'S'
+#define COMM_STATUS_OK '$'
+#define COMM_STATUS_ERR '^'
+#define COMM_STATUS_CHUNK_OK '%'
 
 uint8_t hex2int(char c) {
   if(c >= '0' && c<= '9') {
@@ -103,7 +106,7 @@ void read_signature() {
   advance_counter();
   serial_write_byte(read_byte());
   advance_counter();
-  Serial.write('$');
+  Serial.write(COMM_STATUS_OK);
 }
 
 void chip_erase() {
@@ -118,7 +121,7 @@ void chip_erase() {
   delay(12);
   digitalWrite(EN_12V_PIN, LOW);
   digitalWrite(P32_PIN, HIGH);
-  Serial.write('$');
+  Serial.write(COMM_STATUS_OK);
 }
 
 void read_flash(int count) {
@@ -138,9 +141,9 @@ void chip_read() {
   uint8_t hi = serial_get_byte();
   uint8_t lo = serial_get_byte();
   uint16_t count = hi * 256 + lo;
-  Serial.print("$");
+  Serial.write(COMM_STATUS_OK);
   read_flash(count); 
-  Serial.print("$");
+  Serial.write(COMM_STATUS_OK);
 }
 
 uint8_t write_next(uint8_t dat) {
@@ -201,7 +204,7 @@ void setup() {
   digitalWrite(XTAL1_PIN, LOW);
 
   Serial.println("Device ready");
-  Serial.print("$");
+  Serial.write(COMM_STATUS_OK);
 }
 
 void chip_write() {
@@ -212,7 +215,7 @@ void chip_write() {
   uint16_t count = hi * 256 + lo;
   init_prog();
   delay(1);
-  Serial.write('$');
+  Serial.write(COMM_STATUS_OK);
   for(uint16_t i = 0; i<count;) {
     uint16_t ct = 0;
     for(;ct<chunksize && i<count; i++,ct++) {
@@ -221,13 +224,13 @@ void chip_write() {
     }
     for(uint16_t j = 0; j<ct;j++) {
       if(!write_next(data[j])) {
-        Serial.print("^");
+        Serial.write(COMM_STATUS_ERR);
         return;
       }
     }
-    Serial.write('$');
+    Serial.write(COMM_STATUS_CHUNK_OK);
   }
-  Serial.write('$');
+  Serial.write(COMM_STATUS_OK);
 }
 
 void loop() {
@@ -252,6 +255,6 @@ void loop() {
     
     default:
     Serial.println("Unknown cmd");
-    Serial.print('^');
+    Serial.write(COMM_STATUS_ERR);
   }
 }

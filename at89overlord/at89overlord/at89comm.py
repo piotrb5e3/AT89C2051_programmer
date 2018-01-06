@@ -8,6 +8,7 @@ STATUS_INVALID = 'INV'
 
 COMM_STATUS_OK = '$'
 COMM_STATUS_ERR = '^'
+COMM_STATUS_CHUNK_OK = '%'
 COMM_COMMAND_ERASE = 'X'
 COMM_COMMAND_READ = 'R'
 COMM_COMMAND_WRITE = 'W'
@@ -41,14 +42,24 @@ class AT89comm:
         self.status = STATUS_OK
 
     def wait_end(self):
+        s = self._await_status_code([COMM_STATUS_OK, COMM_STATUS_ERR])
+        if s != COMM_STATUS_OK:
+            self._raise_programmer_error()
+
+    def wait_chunk_ok(self):
+        s = self._await_status_code([COMM_STATUS_CHUNK_OK, COMM_STATUS_ERR])
+        if s != COMM_STATUS_CHUNK_OK:
+            self._raise_programmer_error()
+    
+    def _raise_programmer_error(self):
+        self.status = STATUS_ERR
+        raise AT89CommException('Programmer error')
+
+    def _await_status_code(self, awaited_codes):
         c = self._read()
-        while c != COMM_STATUS_OK and c != COMM_STATUS_ERR:
+        while c not in awaited_codes:
             c = self._read()
-        if c == COMM_STATUS_OK:
-            return True
-        else:
-            self.status = STATUS_ERR
-            raise AT89CommException('Programmer error')
+        return c
 
     def do_erase(self):
         self.require_status_ok()
@@ -77,7 +88,7 @@ class AT89comm:
             data = data[chunksize:]
             for byte in v:
                 self._write('{:02X}'.format(byte))
-            self.wait_end()
+            self.wait_chunk_ok()
         self.wait_end()
 
     def do_verify(self, data):
