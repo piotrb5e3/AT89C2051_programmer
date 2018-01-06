@@ -115,11 +115,11 @@ void chip_erase() {
   digitalWrite(P34_PIN, LOW);
   digitalWrite(P35_PIN, LOW);
   digitalWrite(P37_PIN, LOW);
-  digitalWrite(EN_12V_PIN, HIGH);
+  on12();
   delay(1);
   digitalWrite(P32_PIN, LOW);
   delay(12);
-  digitalWrite(EN_12V_PIN, LOW);
+  off12();
   digitalWrite(P32_PIN, HIGH);
   Serial.write(COMM_STATUS_OK);
 }
@@ -146,38 +146,39 @@ void chip_read() {
   Serial.write(COMM_STATUS_OK);
 }
 
-uint8_t write_next(uint8_t dat) {
-  uint8_t resp = 0;
+void write_next(uint8_t dat) {
+  //Set byte
+  put_byte(dat);
+  delayMicroseconds(2);
+  //Pulse to start write
+  digitalWrite(P32_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(P32_PIN, HIGH);
+
+  //Wait for the write cycle to complete
+  delayMicroseconds(2500);
+  advance_counter();
+  delayMicroseconds(15);
+}
+
+void start_write() {
   //Set mode to write
   digitalWrite(P33_PIN, LOW);
   digitalWrite(P34_PIN, HIGH);
   digitalWrite(P35_PIN, HIGH);
   digitalWrite(P37_PIN, HIGH);
   delay(1);
-  
-  //Set byte
-  put_byte(dat);
   //HVprog_enable
   on12();
   delayMicroseconds(1500);
-  //Pulse to start write
-  digitalWrite(P32_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(P32_PIN, HIGH);
-  delayMicroseconds(15);
-  //HVprog_disable
+}
+
+void stop_write() {
   off12();
-  delay(3);
-  //Set mode to read
+  digitalWrite(P33_PIN, LOW);
   digitalWrite(P34_PIN, LOW);
-  delayMicroseconds(2);
-  resp = read_byte();
-  if(resp != dat) {
-    return 0;
-  }
-  delayMicroseconds(10);
-  advance_counter();
-  return 1;
+  digitalWrite(P35_PIN, LOW);
+  digitalWrite(P37_PIN, LOW);
 }
 
 void setup() {
@@ -216,6 +217,8 @@ void chip_write() {
   init_prog();
   delay(1);
   Serial.write(COMM_STATUS_OK);
+
+  start_write();
   for(uint16_t i = 0; i<count;) {
     uint16_t ct = 0;
     for(;ct<chunksize && i<count; i++,ct++) {
@@ -223,13 +226,12 @@ void chip_write() {
       data[ct] = tmp;
     }
     for(uint16_t j = 0; j<ct;j++) {
-      if(!write_next(data[j])) {
-        Serial.write(COMM_STATUS_ERR);
-        return;
-      }
+      write_next(data[j]);
     }
     Serial.write(COMM_STATUS_CHUNK_OK);
   }
+  stop_write();
+
   Serial.write(COMM_STATUS_OK);
 }
 
