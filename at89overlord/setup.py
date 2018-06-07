@@ -26,8 +26,8 @@ setup(
         'pyserial',
         'termcolor',
     ],
-    setup_requires=['pytest-runner', 'pytest-flake8'],
-    tests_require=['pytest>=3.5', 'flake8'],
+    setup_requires=['pytest-runner', 'pytest-flake8', 'pytest>=3.5'],
+    tests_require=['pytest', 'flake8'],
     python_requires='>=3',
     packages=find_packages(),
     entry_points={

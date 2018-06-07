@@ -4,4 +4,4 @@
     - "3.5"
     - "3.6"
   script:
-    - ./at89overlord/setup.py -q test
+    - python at89overlord/setup.py -q test
