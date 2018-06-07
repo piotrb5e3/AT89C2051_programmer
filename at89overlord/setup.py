@@ -20,7 +20,7 @@ setup(
     url='https://github.com/piotrb5e3/AT89C2051_programmer',
     author='Piotr Bakalarski',
     author_email='piotrb5e3@gmail.com',
-    license='GNU General Public License v3 (GPLv3)',
+    license='GPLv3',
     install_requires=[
         'intelhex',
         'pyserial',
