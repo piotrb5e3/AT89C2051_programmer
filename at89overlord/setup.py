@@ -1,9 +1,22 @@
+#!/usr/bin/env python
+import os
+import codecs
 from setuptools import setup, find_packages
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+def read(*parts):
+    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+        return fp.read()
+
 
 setup(
     name='at89overlord',
     version='0.3.0',
     description='Arduino-based AT89C2051 programmer',
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     url='https://github.com/piotrb5e3/AT89C2051_programmer',
     author='Piotr Bakalarski',
     author_email='piotrb5e3@gmail.com',
@@ -13,6 +26,8 @@ setup(
         'pyserial',
         'termcolor',
     ],
+    setup_requires=['pytest-runner', 'pytest-flake8'],
+    tests_require=['pytest', 'flake8'],
     python_requires='>=3',
     packages=find_packages(),
     entry_points={

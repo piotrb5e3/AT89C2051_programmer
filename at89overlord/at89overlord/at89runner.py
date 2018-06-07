@@ -3,6 +3,7 @@ import argparse
 
 from at89overlord.at89comm import AT89comm
 
+# AT89C2051 has only 2K of on-chip flash
 AT89C2051_FLASH_SIZE = 0x800
 
 
@@ -20,7 +21,7 @@ def write_hex(comm, filename, verify):
 
 def read_hex(comm, filename):
     print('# Reading chip flash...')
-    data = comm.do_read(AT89C2051_FLASH_SIZE)  # AT89C2051 has only 2K of on-chip flash
+    data = comm.do_read(AT89C2051_FLASH_SIZE)
     ih = IntelHex()
     for i in range(AT89C2051_FLASH_SIZE):
         ih[i] = data[i]
@@ -29,16 +30,16 @@ def read_hex(comm, filename):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Uploader for Arduino based AT89C2051 programmer')
-    parser.add_argument('-p', '--port', dest='port', metavar='PORT', default='/dev/ttyACM0', help='serial port with arduino connected to it')
-    parser.add_argument('-b', '--baud', dest='baud', metavar='BAUD', type=int, default=9600, help='baud rate of connected arduino')
-    parser.add_argument('-e', '--no-erase', dest='ne', action='store_true', help='do not erase flash before write')
-    parser.add_argument('-c', '--no-confirm', dest='nc', action='store_true', help='do not confirm chip ID before executing an action')
-    parser.add_argument('-V', '--no-verify', dest='nv', action='store_true', help='do not verify flash content after write')
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='more verbose output')
+    parser = argparse.ArgumentParser(description='Uploader for Arduino based AT89C2051 programmer')  # noqa 501
+    parser.add_argument('-p', '--port', dest='port', metavar='PORT', default='/dev/ttyACM0', help='serial port with arduino connected to it')  # noqa 501
+    parser.add_argument('-b', '--baud', dest='baud', metavar='BAUD', type=int, default=9600, help='baud rate of connected arduino')  # noqa 501
+    parser.add_argument('-e', '--no-erase', dest='ne', action='store_true', help='do not erase flash before write')  # noqa 501
+    parser.add_argument('-c', '--no-confirm', dest='nc', action='store_true', help='do not confirm chip ID before executing an action')  # noqa 501
+    parser.add_argument('-V', '--no-verify', dest='nv', action='store_true', help='do not verify flash content after write')  # noqa 501
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='more verbose output')  # noqa 501
     g = parser.add_mutually_exclusive_group(required=True)
-    g.add_argument('-f', '--file', dest='filename', metavar='FILE', nargs=1, help='intel hex file to be flashed onto the chip')
-    g.add_argument('-r', '--read', dest='dest_filename', metavar='FILE', nargs=1, help='read flash content from chip and write to intel hex file')
+    g.add_argument('-f', '--file', dest='filename', metavar='FILE', nargs=1, help='intel hex file to be flashed onto the chip')  # noqa 501
+    g.add_argument('-r', '--read', dest='dest_filename', metavar='FILE', nargs=1, help='read flash content from chip and write to intel hex file')  # noqa 501
 
     a = parser.parse_args()
 

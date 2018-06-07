@@ -50,7 +50,7 @@ class AT89comm:
         s = self._await_status_code([COMM_STATUS_CHUNK_OK, COMM_STATUS_ERR])
         if s != COMM_STATUS_CHUNK_OK:
             self._raise_programmer_error()
-    
+
     def _raise_programmer_error(self):
         self.status = STATUS_ERR
         raise AT89CommException('Programmer error')
