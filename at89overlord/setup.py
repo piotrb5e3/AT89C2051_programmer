@@ -27,7 +27,7 @@ setup(
         'termcolor',
     ],
     setup_requires=['pytest-runner', 'pytest-flake8'],
-    tests_require=['pytest', 'flake8'],
+    tests_require=['pytest>=3.5', 'flake8'],
     python_requires='>=3',
     packages=find_packages(),
     entry_points={
@@ -46,8 +46,6 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
